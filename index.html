@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Task — One Task. One Day. One Step.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ====== CSS CUSTOM PROPERTIES ====== */
+    :root {
+      --bg: #f8f7f4;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --muted: #888;
+      --border: #e8e4de;
+      --accent: #c8a96e;
+      --accent2: #7c6f5c;
+      --green: #3d9970;
+      --card-shadow: 0 8px 40px rgba(0,0,0,0.08);
+      --radius: 24px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f0e0c;
+      --surface: #1c1b18;
+      --text: #f0ede8;
+      --muted: #6b6860;
+      --border: #2a2926;
+      --accent: #d4aa72;
+      --accent2: #a8977e;
+      --card-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+
+    /* ====== BASE STYLES ====== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
+      overflow-x: hidden;
+    }
+
+    /* ====== GRAIN TEXTURE OVERLAY ====== */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ====== BACKGROUND BLOBS ====== */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.3;
+      transition: opacity 0.4s;
+    }
+    .blob-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #c8a96e44, transparent);
+      top: -100px; right: -100px;
+      animation: blobFloat 12s ease-in-out infinite;
+    }
+    .blob-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #7c6f5c33, transparent);
+      bottom: -80px; left: -80px;
+      animation: blobFloat 16s ease-in-out infinite reverse;
+    }
+    [data-theme="dark"] .blob { opacity: 0.15; }
+
+    @keyframes blobFloat {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      33% { transform: translate(20px,-20px) scale(1.05); }
+      66% { transform: translate(-15px,15px) scale(0.95); }
+    }
+
+    /* ====== LAYOUT ====== */
+    .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 24px 20px 60px; min-height: 100vh; }
+
+    /* ====== HEADER ====== */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+    .controls { display: flex; gap: 10px; align-items: center; }
+
+    /* Language switcher */
+    .lang-switcher {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px;
+      gap: 2px;
+      box-shadow: var(--card-shadow);
+    }
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Dark mode toggle */
+    .theme-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--card-shadow);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: all 0.25s ease;
+    }
+    .theme-btn:hover { transform: scale(1.08); }
+
+    /* ====== DATE BADGE ====== */
+    .date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideUp 0.6s ease both;
+    }
+    .date-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ====== STREAK ====== */
+    .streak-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideUp 0.6s 0.1s ease both;
+    }
+    .streak-info { display: flex; align-items: center; gap: 12px; }
+    .streak-flame { font-size: 28px; line-height: 1; animation: flameWiggle 2s ease-in-out infinite; }
+    @keyframes flameWiggle {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+    .streak-count { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--accent); line-height: 1; }
+    .streak-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .streak-dots { display: flex; gap: 5px; }
+    .streak-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s ease;
+    }
+    .streak-dot.active { background: var(--accent); }
+
+    /* ====== MAIN TASK CARD ====== */
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeSlideUp 0.6s 0.2s ease both;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .task-card:hover { transform: translateY(-2px); box-shadow: 0 16px 60px rgba(0,0,0,0.12); }
+    .task-card.completed { border-color: var(--green); }
+
+    /* Category pill */
+    .category-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* Task title */
+    .task-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text);
+      margin-bottom: 24px;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Complete button */
+    .complete-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 100px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .complete-btn.pending {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .complete-btn.pending:hover { transform: scale(1.02); opacity: 0.9; }
+    .complete-btn.done {
+      background: var(--green);
+      color: white;
+    }
+    .complete-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.2), transparent);
+      transform: scale(0);
+      transition: transform 0.6s ease;
+    }
+    .complete-btn:active::after { transform: scale(3); opacity: 0; }
+
+    /* ====== QUOTE CARD ====== */
+    .quote-card {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border-radius: var(--radius);
+      padding: 24px 24px;
+      margin-bottom: 16px;
+      animation: fadeSlideUp 0.6s 0.3s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+    .quote-card::before {
+      content: '"';
+      position: absolute;
+      top: -10px; left: 16px;
+      font-family: 'Playfair Display', serif;
+      font-size: 120px;
+      color: rgba(255,255,255,0.15);
+      line-height: 1;
+      pointer-events: none;
+    }
+    .quote-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-style: italic;
+      color: white;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .quote-author {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* ====== TASK HISTORY ====== */
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideUp 0.6s 0.4s ease both;
+    }
+    .history-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .history-list { display: flex; flex-direction: column; gap: 10px; }
+    .history-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .history-item .check { color: var(--green); font-size: 16px; }
+    .history-item .task-name { flex: 1; color: var(--text); font-weight: 500; }
+    .history-item .task-date { font-size: 11px; color: var(--muted); }
+
+    /* ====== ONBOARDING OVERLAY ====== */
+    .onboarding {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.4s ease;
+    }
+    .onboarding-card {
+      background: var(--surface);
+      border-radius: 32px;
+      padding: 40px 32px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      animation: scaleIn 0.4s ease;
+    }
+    .onboarding-emoji { font-size: 60px; margin-bottom: 20px; display: block; }
+    .onboarding-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .onboarding-desc { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 32px; }
+    .onboarding-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 100px;
+      border: none;
+      background: var(--text);
+      color: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .onboarding-btn:hover { transform: scale(1.02); }
+
+    /* ====== ANIMATIONS ====== */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes completePop {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.06); }
+      60% { transform: scale(0.97); }
+      100% { transform: scale(1); }
+    }
+    .pop { animation: completePop 0.5s ease; }
+
+    /* ====== CONFETTI ====== */
+    .confetti-piece {
+      position: fixed;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      z-index: 1000;
+      pointer-events: none;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ====== SCROLLBAR ====== */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* ====== MOBILE TWEAKS ====== */
+    @media (max-width: 380px) {
+      .task-title { font-size: 24px; }
+      .app { padding: 20px 16px 60px; }
+    }
+
+    /* ====== COMPLETED CHECKMARK SVG ====== */
+    .checkmark-svg { display: inline-block; }
+    .check-circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2; stroke-miterlimit: 10; stroke: white; fill: none; animation: stroke 0.6s cubic-bezier(0.65,0,0.45,1) forwards; }
+    .check-path { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65,0,0.45,1) 0.8s forwards; stroke: white; stroke-width: 3; fill: none; }
+    @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+
+    /* No history message */
+    .no-history { text-align: center; color: var(--muted); font-size: 13px; padding: 12px 0; }
+
+    /* Task number indicator */
+    .task-number {
+      position: absolute;
+      top: 20px; right: 24px;
+      font-family: 'Playfair Display', serif;
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--border);
+      line-height: 1;
+      pointer-events: none;
+      transition: color 0.3s;
+    }
+    .task-card.completed .task-number { color: rgba(61,153,112,0.15); }
+  </style>
+</head>
+<body>
+
+<!-- Background decorations -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- Onboarding overlay (shown for first-time users) -->
+<div class="onboarding" id="onboarding" style="display:none;">
+  <div class="onboarding-card">
+    <span class="onboarding-emoji">🌱</span>
+    <h1 class="onboarding-title" id="ob-title">Welcome to Daily Task</h1>
+    <p class="onboarding-desc" id="ob-desc">One simple task every day to improve your life. Small steps, big changes. Complete your daily task and build a streak!</p>
+    <button class="onboarding-btn" id="ob-btn" onclick="closeOnboarding()">Let's Begin →</button>
+  </div>
+</div>
+
+<!-- Main app -->
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">daily<span>.</span>task</div>
+    <div class="controls">
+      <!-- Language switcher -->
+      <div class="lang-switcher">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ru')">RU</button>
+        <button class="lang-btn" onclick="setLang('uz')">UZ</button>
+      </div>
+      <!-- Dark mode toggle -->
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle dark mode">🌙</button>
+    </div>
+  </header>
+
+  <!-- Date badge -->
+  <div class="date-badge">
+    <div class="dot"></div>
+    <span id="date-display"></span>
+  </div>
+
+  <!-- Streak bar -->
+  <div class="streak-bar">
+    <div class="streak-info">
+      <span class="streak-flame">🔥</span>
+      <div>
+        <div class="streak-count" id="streak-count">0</div>
+        <div class="streak-label" id="streak-label">day streak</div>
+      </div>
+    </div>
+    <div class="streak-dots" id="streak-dots"></div>
+  </div>
+
+  <!-- Main task card -->
+  <div class="task-card" id="task-card">
+    <div class="task-number" id="task-number">#01</div>
+    <div class="category-pill" id="category-pill">
+      <span id="category-emoji">💪</span>
+      <span id="category-name">Health</span>
+    </div>
+    <h2 class="task-title" id="task-title">Loading your task...</h2>
+    <button class="complete-btn pending" id="complete-btn" onclick="completeTask()">
+      <span id="btn-text">Mark as Completed</span>
+    </button>
+  </div>
+
+  <!-- Motivational quote -->
+  <div class="quote-card">
+    <p class="quote-text" id="quote-text">"The secret of getting ahead is getting started."</p>
+    <p class="quote-author" id="quote-author">— Mark Twain</p>
+  </div>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-title" id="history-label">RECENT COMPLETIONS</div>
+    <div class="history-list" id="history-list">
+      <div class="no-history" id="no-history-msg">No completions yet. Start today! 🌟</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* =============================================
+   TRANSLATIONS (EN / RU / UZ)
+   ============================================= */
+const i18n = {
+  en: {
+    streak: "day streak",
+    markComplete: "Mark as Completed",
+    completed: "Completed Today! 🎉",
+    history: "RECENT COMPLETIONS",
+    noHistory: "No completions yet. Start today! 🌟",
+    obTitle: "Welcome to Daily Task",
+    obDesc: "One simple task every day to improve your life. Small steps, big changes. Complete your daily task and build a streak!",
+    obBtn: "Let's Begin →",
+    categories: { health: "Health", productivity: "Productivity", money: "Money", family: "Family", learning: "Learning" },
+    categoryEmoji: { health: "💪", productivity: "⚡", money: "💰", family: "❤️", learning: "📚" }
+  },
+  ru: {
+    streak: "дней подряд",
+    markComplete: "Отметить как выполнено",
+    completed: "Выполнено сегодня! 🎉",
+    history: "НЕДАВНИЕ ДОСТИЖЕНИЯ",
+    noHistory: "Пока нет завершённых задач. Начни сегодня! 🌟",
+    obTitle: "Добро пожаловать",
+    obDesc: "Одно простое задание каждый день, чтобы улучшить твою жизнь. Маленькие шаги — большие перемены!",
+    obBtn: "Начать →",
+    categories: { health: "Здоровье", productivity: "Продуктивность", money: "Деньги", family: "Семья", learning: "Учёба" },
+    categoryEmoji: { health: "💪", productivity: "⚡", money: "💰", family: "❤️", learning: "📚" }
+  },
+  uz: {
+    streak: "kun ketma-ket",
+    markComplete: "Bajarildi deb belgilash",
+    completed: "Bugun bajarildi! 🎉",
+    history: "SO'NGGI YUTUQLAR",
+    noHistory: "Hali bajarilgan vazifalar yo'q. Bugun boshlang! 🌟",
+    obTitle: "Xush kelibsiz",
+    obDesc: "Har kuni hayotingizni yaxshilash uchun bitta oddiy vazifa. Kichik qadamlar — katta o'zgarishlar!",
+    obBtn: "Boshlash →",
+    categories: { health: "Salomatlik", productivity: "Samaradorlik", money: "Pul", family: "Oila", learning: "O'rganish" },
+    categoryEmoji: { health: "💪", productivity: "⚡", money: "💰", family: "❤️", learning: "📚" }
+  }
+};
+
+/* =============================================
+   TASK DATABASE — 60 tasks across 5 categories
+   ============================================= */
+const tasks = [
+  // HEALTH (12)
+  { id: 1,  cat: "health",       en: "Do 20 squats right now", ru: "Сделай 20 приседаний прямо сейчас", uz: "Hozir 20 ta o'tirib tur bajaring" },
+  { id: 2,  cat: "health",       en: "Drink 8 glasses of water today", ru: "Выпей 8 стаканов воды сегодня", uz: "Bugun 8 stakan suv iching" },
+  { id: 3,  cat: "health",       en: "Take a 15-minute walk outside", ru: "Погуляй на улице 15 минут", uz: "Tashqarida 15 daqiqa yuring" },
+  { id: 4,  cat: "health",       en: "Sleep before 11 PM tonight", ru: "Ляг спать до 23:00 сегодня", uz: "Bugun kechqurun soat 23:00 gacha uhlang" },
+  { id: 5,  cat: "health",       en: "Do 10 minutes of stretching", ru: "Сделай 10 минут растяжки", uz: "10 daqiqa cho'zilish mashqlari bajaring" },
+  { id: 6,  cat: "health",       en: "Eat at least 2 fruits or vegetables today", ru: "Съешь хотя бы 2 фрукта или овоща сегодня", uz: "Bugun kamida 2 ta meva yoki sabzavot yeng" },
+  { id: 7,  cat: "health",       en: "Take the stairs instead of the elevator", ru: "Используй лестницу вместо лифта", uz: "Lift o'rniga zinapoyadan foydalaning" },
+  { id: 8,  cat: "health",       en: "Do 30 jumping jacks", ru: "Сделай 30 прыжков с разведением рук", uz: "30 ta sakrash bajaring" },
+  { id: 9,  cat: "health",       en: "Spend 10 minutes meditating", ru: "Помедитируй 10 минут", uz: "10 daqiqa meditatsiya qiling" },
+  { id: 10, cat: "health",       en: "Do a 5-minute plank challenge", ru: "Сделай планку на 5 минут", uz: "5 daqiqa taxta pozasini bajaring" },
+  { id: 11, cat: "health",       en: "No screen time 1 hour before bed", ru: "Без экранов за 1 час до сна", uz: "Uxlashdan 1 soat oldin ekransiz o'ting" },
+  { id: 12, cat: "health",       en: "Do 15 push-ups", ru: "Сделай 15 отжиманий", uz: "15 ta qo'l bilan suring bajaring" },
+
+  // PRODUCTIVITY (12)
+  { id: 13, cat: "productivity",  en: "Write down your top 3 goals for this month", ru: "Запиши 3 главные цели на этот месяц", uz: "Bu oydagi 3 ta asosiy maqsadingizni yozing" },
+  { id: 14, cat: "productivity",  en: "Clean and organize your desk", ru: "Убери и организуй свой стол", uz: "Stolingizni tartibga keltiring" },
+  { id: 15, cat: "productivity",  en: "Do the one task you've been avoiding", ru: "Сделай то, что ты откладывал", uz: "Qochayotgan ishingizni bajaring" },
+  { id: 16, cat: "productivity",  en: "Plan tomorrow before it starts", ru: "Запланируй завтрашний день заранее", uz: "Ertangi kunni oldindan rejalang" },
+  { id: 17, cat: "productivity",  en: "Turn off notifications for 2 hours and focus", ru: "Отключи уведомления на 2 часа и сосредоточься", uz: "2 soat bildirishnomalarni o'chiring va diqqatni jamlang" },
+  { id: 18, cat: "productivity",  en: "Delete 3 apps you don't use anymore", ru: "Удали 3 приложения, которыми не пользуешься", uz: "Ishlatmaydigan 3 ta ilovani o'chiring" },
+  { id: 19, cat: "productivity",  en: "Write a journal entry today", ru: "Веди дневник сегодня", uz: "Bugun kundalik yozing" },
+  { id: 20, cat: "productivity",  en: "Use the Pomodoro technique for 2 work sessions", ru: "Используй технику Помодоро для 2 рабочих сессий", uz: "2 ish sessiyasida Pomodoro usulidan foydalaning" },
+  { id: 21, cat: "productivity",  en: "Unsubscribe from 5 emails you never read", ru: "Отпишись от 5 рассылок, которые ты не читаешь", uz: "O'qimaydigan 5 ta xabar ro'yxatidan chiqing" },
+  { id: 22, cat: "productivity",  en: "Read for 20 minutes without distractions", ru: "Читай 20 минут без отвлечений", uz: "Chalg'itirishlarsiz 20 daqiqa o'qing" },
+  { id: 23, cat: "productivity",  en: "Set a specific bedtime and wake-up time", ru: "Установи конкретное время сна и подъёма", uz: "Aniq uyqu va uyg'onish vaqtini belgilang" },
+  { id: 24, cat: "productivity",  en: "Review and update your to-do list", ru: "Пересмотри и обнови список задач", uz: "Vazifalar ro'yxatingizni ko'rib chiqing va yangilang" },
+
+  // MONEY (12)
+  { id: 25, cat: "money",         en: "Save $1 or its equivalent today", ru: "Сэкономь 1 доллар сегодня", uz: "Bugun 1 dollar tejang" },
+  { id: 26, cat: "money",         en: "Track every expense you make today", ru: "Запиши каждую трату сегодня", uz: "Bugungi barcha xarajatlaringizni yozing" },
+  { id: 27, cat: "money",         en: "Skip one unnecessary purchase today", ru: "Откажись от одной ненужной покупки сегодня", uz: "Bugun bitta keraksiz xariddan voz keching" },
+  { id: 28, cat: "money",         en: "Look for a skill you can monetize", ru: "Найди навык, который можно монетизировать", uz: "Pul ishlashingiz mumkin bo'lgan ko'nikma toping" },
+  { id: 29, cat: "money",         en: "Cook at home instead of ordering food", ru: "Приготовь еду дома вместо заказа", uz: "Buyurtma berish o'rniga uyda pishiring" },
+  { id: 30, cat: "money",         en: "Review your subscriptions and cancel one", ru: "Просмотри подписки и отмени одну", uz: "Obunalaringizni ko'rib chiqing va birini bekor qiling" },
+  { id: 31, cat: "money",         en: "Set a savings goal for this month", ru: "Поставь цель по накоплениям на этот месяц", uz: "Bu oy uchun tejash maqsadini belgilang" },
+  { id: 32, cat: "money",         en: "Learn one new thing about investing", ru: "Узнай одну новую вещь об инвестициях", uz: "Investitsiyalar haqida yangi narsa o'rganing" },
+  { id: 33, cat: "money",         en: "Sell something you haven't used in a year", ru: "Продай то, чем не пользовался год", uz: "Bir yil foydalanmagan narsangizni soting" },
+  { id: 34, cat: "money",         en: "Compare prices before your next purchase", ru: "Сравни цены перед следующей покупкой", uz: "Keyingi xariddan oldin narxlarni solishtiring" },
+  { id: 35, cat: "money",         en: "Read about one successful person's money habits", ru: "Прочитай о денежных привычках одного успешного человека", uz: "Bitta muvaffaqiyatli odamning pul odatlari haqida o'qing" },
+  { id: 36, cat: "money",         en: "Make a simple budget for the week", ru: "Составь простой бюджет на неделю", uz: "Hafta uchun oddiy byudjet tuzing" },
+
+  // FAMILY (12)
+  { id: 37, cat: "family",        en: "Help your parents with something today", ru: "Помоги родителям с чем-нибудь сегодня", uz: "Bugun ota-onangizga nimadir bilan yordam bering" },
+  { id: 38, cat: "family",        en: "Call or text a friend you haven't spoken to in a while", ru: "Позвони другу, с которым давно не общался", uz: "Uzoq vaqt gaplashmagan do'stingizga qo'ng'iroq qiling" },
+  { id: 39, cat: "family",        en: "Have dinner with your family without phones", ru: "Пообедай с семьёй без телефонов", uz: "Oilangiz bilan telefonsiz kechki ovqat yeng" },
+  { id: 40, cat: "family",        en: "Write a thank-you note to someone who helped you", ru: "Напиши благодарственную записку тому, кто помог", uz: "Sizga yordam bergan odamga minnatdorchilik yozing" },
+  { id: 41, cat: "family",        en: "Give someone a genuine compliment today", ru: "Скажи кому-то искренний комплимент сегодня", uz: "Bugun birovga chin yurakdan maqtov bering" },
+  { id: 42, cat: "family",        en: "Do one household chore without being asked", ru: "Сделай одно домашнее дело без напоминания", uz: "So'ralmasdan bitta uy ishini bajaring" },
+  { id: 43, cat: "family",        en: "Spend 30 minutes of quality time with a loved one", ru: "Проведи 30 минут качественного времени с близким", uz: "Yaqiningiz bilan 30 daqiqa sifatli vaqt o'tkazing" },
+  { id: 44, cat: "family",        en: "Share something you're grateful for at dinner", ru: "Поделись чем-то, за что благодарен, за ужином", uz: "Kechki ovqatda minnatdor bo'lgan narsangizni baham ko'ring" },
+  { id: 45, cat: "family",        en: "Listen actively without interrupting someone today", ru: "Сегодня выслушай кого-то, не перебивая", uz: "Bugun birovni to'xtatmasdan faol eshiting" },
+  { id: 46, cat: "family",        en: "Volunteer or help a neighbour with something", ru: "Помоги соседу с чем-нибудь", uz: "Qo'shniga nimadir bilan yordam bering" },
+  { id: 47, cat: "family",        en: "Smile and greet 5 strangers today", ru: "Улыбнись и поздоровайся с 5 незнакомцами сегодня", uz: "Bugun 5 ta notanish odamga jilmayib salom bering" },
+  { id: 48, cat: "family",        en: "Cook something special for someone you love", ru: "Приготовь что-то особенное для близкого человека", uz: "Yaqiningiz uchun biror maxsus narsa pishiring" },
+
+  // LEARNING (12)
+  { id: 49, cat: "learning",      en: "Learn 10 new English words today", ru: "Выучи 10 новых английских слов сегодня", uz: "Bugun 10 ta yangi inglizcha so'z o'rganing" },
+  { id: 50, cat: "learning",      en: "Watch one educational YouTube video", ru: "Посмотри одно образовательное видео на YouTube", uz: "YouTube'da bitta ta'limiy video ko'ring" },
+  { id: 51, cat: "learning",      en: "Read one article about a topic you know nothing about", ru: "Прочитай статью на тему, о которой ничего не знаешь", uz: "Bilmagan mavzuda bitta maqola o'qing" },
+  { id: 52, cat: "learning",      en: "Practice a skill for 20 minutes", ru: "Практикуй какой-либо навык 20 минут", uz: "Biror ko'nikmani 20 daqiqa mashq qiling" },
+  { id: 53, cat: "learning",      en: "Listen to a podcast episode on a new topic", ru: "Послушай подкаст на новую тему", uz: "Yangi mavzudagi podcast epizodini tinglang" },
+  { id: 54, cat: "learning",      en: "Teach someone something you know", ru: "Научи кого-то тому, что умеешь сам", uz: "Birovga biladigan narsangizni o'rgating" },
+  { id: 55, cat: "learning",      en: "Try writing with your non-dominant hand", ru: "Попробуй писать нерабочей рукой", uz: "Yetakchi bo'lmagan qo'lingiz bilan yozib ko'ring" },
+  { id: 56, cat: "learning",      en: "Memorize 5 important facts about a country", ru: "Запомни 5 важных фактов о какой-либо стране", uz: "Biror mamlakat haqida 5 ta muhim faktni yodlang" },
+  { id: 57, cat: "learning",      en: "Start a new book today (even 5 pages)", ru: "Начни новую книгу сегодня (хотя бы 5 страниц)", uz: "Bugun yangi kitob boshlang (hatto 5 sahifa ham bo'lsa)" },
+  { id: 58, cat: "learning",      en: "Learn one recipe you've never made before", ru: "Узнай один рецепт, который ещё не готовил", uz: "Hech qachon qilmagan bitta retseptni o'rganing" },
+  { id: 59, cat: "learning",      en: "Write down 5 things you learned this week", ru: "Запиши 5 вещей, которые узнал на этой неделе", uz: "Bu hafta o'rgangan 5 ta narsani yozing" },
+  { id: 60, cat: "learning",      en: "Solve a math puzzle or brain teaser", ru: "Реши математическую задачу или головоломку", uz: "Matematik topishmoq yoki miya mashqi yeching" }
+];
+
+/* =============================================
+   MOTIVATIONAL QUOTES (multilingual)
+   ============================================= */
+const quotes = {
+  en: [
+    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text: "Small daily improvements are the key to staggering long-term results.", author: "Robin Sharma" },
+    { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
+    { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+    { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+    { text: "It always seems impossible until it's done.", author: "Nelson Mandela" }
+  ],
+  ru: [
+    { text: "Секрет успеха — начать действовать.", author: "Марк Твен" },
+    { text: "Маленькие улучшения каждый день ведут к огромным результатам.", author: "Робин Шарма" },
+    { text: "Дисциплина — это выбор между тем, что хочется сейчас, и тем, чего хочется больше всего.", author: "Авраам Линкольн" },
+    { text: "Не нужно быть великим, чтобы начать, но нужно начать, чтобы стать великим.", author: "Зиг Зиглар" },
+    { text: "Единственный способ делать великое — любить то, что делаешь.", author: "Стив Джобс" },
+    { text: "Успех — это сумма небольших усилий, повторяемых изо дня в день.", author: "Роберт Коллир" },
+    { text: "Поверь в себя, и ты уже на полпути к цели.", author: "Теодор Рузвельт" },
+    { text: "Всё кажется невозможным, пока не будет сделано.", author: "Нельсон Мандела" }
+  ],
+  uz: [
+    { text: "Muvaffaqiyat siri — boshlashdir.", author: "Mark Tven" },
+    { text: "Har kuni kichik yaxshilanishlar katta natijalarga olib keladi.", author: "Robin Sharma" },
+    { text: "Intizom — hozir xohlaganingiz va eng ko'p xohlaganingiz o'rtasida tanlov.", author: "Abraham Linkoln" },
+    { text: "Boshlash uchun ulug' bo'lishingiz shart emas, lekin ulug' bo'lish uchun boshlashingiz kerak.", author: "Zig Ziglar" },
+    { text: "Buyuk ish qilishning yagona yo'li — siz qilayotgan ishni sevishdir.", author: "Stiv Jobs" },
+    { text: "Muvaffaqiyat — har kuni takrorlanadigan kichik sa'y-harakatlar yig'indisi.", author: "Robert Kollier" },
+    { text: "O'zingizga ishoning va siz yarim yo'ldasiz.", author: "Teodor Ruzvelt" },
+    { text: "Bajarilgunga qadar hamma narsa imkonsiz tuyuladi.", author: "Nelson Mandela" }
+  ]
+};
+
+/* =============================================
+   APP STATE
+   ============================================= */
+let currentLang = localStorage.getItem('dt_lang') || 'en';
+let streak       = parseInt(localStorage.getItem('dt_streak') || '0');
+let lastComplete = localStorage.getItem('dt_last') || '';
+let history      = JSON.parse(localStorage.getItem('dt_history') || '[]');
+let isDark       = localStorage.getItem('dt_dark') === 'true';
+
+/* =============================================
+   HELPERS
+   ============================================= */
+// Get today's date string YYYY-MM-DD
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// Get yesterday's date string
+function yesterdayStr() {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
+// Pick task for today based on date (deterministic rotation)
+function getTodayTask() {
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+  return tasks[dayOfYear % tasks.length];
+}
+
+// Pick quote for today
+function getTodayQuote() {
+  const today = new Date();
+  const idx = today.getDate() % quotes[currentLang].length;
+  return quotes[currentLang][idx];
+}
+
+// Format date nicely
+function formatDate(lang) {
+  const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+  const localeMap = { en: 'en-US', ru: 'ru-RU', uz: 'uz-UZ' };
+  return new Date().toLocaleDateString(localeMap[lang] || 'en-US', opts);
+}
+
+/* =============================================
+   RENDER
+   ============================================= */
+function render() {
+  const t   = getTodayTask();
+  const q   = getTodayQuote();
+  const tr  = i18n[currentLang];
+  const done = lastComplete === todayStr();
+
+  // Date
+  document.getElementById('date-display').textContent = formatDate(currentLang);
+
+  // Streak
+  document.getElementById('streak-count').textContent = streak;
+  document.getElementById('streak-label').textContent = tr.streak;
+  renderStreakDots();
+
+  // Category pill
+  document.getElementById('category-emoji').textContent = tr.categoryEmoji[t.cat];
+  document.getElementById('category-name').textContent  = tr.categories[t.cat];
+
+  // Task
+  document.getElementById('task-title').textContent = t[currentLang] || t.en;
+  document.getElementById('task-number').textContent = '#' + String(t.id).padStart(2,'0');
+
+  // Complete button
+  const btn = document.getElementById('complete-btn');
+  const card = document.getElementById('task-card');
+  if (done) {
+    btn.className = 'complete-btn done';
+    btn.innerHTML = `<span id="btn-text">${tr.completed}</span>`;
+    card.classList.add('completed');
+  } else {
+    btn.className = 'complete-btn pending';
+    btn.innerHTML = `<span id="btn-text">${tr.markComplete}</span>`;
+    card.classList.remove('completed');
+  }
+
+  // Quote
+  document.getElementById('quote-text').textContent   = `"${q.text}"`;
+  document.getElementById('quote-author').textContent = `— ${q.author}`;
+
+  // History label
+  document.getElementById('history-label').textContent = tr.history;
+
+  // History list
+  renderHistory();
+
+  // Lang buttons
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === currentLang);
+  });
+}
+
+function renderStreakDots() {
+  const dots = document.getElementById('streak-dots');
+  dots.innerHTML = '';
+  const days = Math.min(streak, 7);
+  for (let i = 0; i < 7; i++) {
+    const d = document.createElement('div');
+    d.className = 'streak-dot' + (i < days ? ' active' : '');
+    dots.appendChild(d);
+  }
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const msg  = document.getElementById('no-history-msg');
+  list.innerHTML = '';
+
+  if (history.length === 0) {
+    const m = document.createElement('div');
+    m.className = 'no-history';
+    m.id = 'no-history-msg';
+    m.textContent = i18n[currentLang].noHistory;
+    list.appendChild(m);
+    return;
+  }
+
+  // Show last 5
+  const recent = [...history].reverse().slice(0, 5);
+  recent.forEach(h => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `
+      <span class="check">✓</span>
+      <span class="task-name">${h.task}</span>
+      <span class="task-date">${h.date}</span>
+    `;
+    list.appendChild(item);
+  });
+}
+
+/* =============================================
+   COMPLETE TASK
+   ============================================= */
+function completeTask() {
+  const done = lastComplete === todayStr();
+  if (done) return; // already done
+
+  // Update streak
+  if (lastComplete === yesterdayStr()) {
+    streak++;
+  } else if (lastComplete !== todayStr()) {
+    streak = 1;
+  }
+
+  lastComplete = todayStr();
+  localStorage.setItem('dt_last',   lastComplete);
+  localStorage.setItem('dt_streak', streak);
+
+  // Add to history
+  const t = getTodayTask();
+  history.push({
+    task: t[currentLang] || t.en,
+    date: formatDate(currentLang).split(',')[0] // just "Monday" etc
+  });
+  localStorage.setItem('dt_history', JSON.stringify(history));
+
+  // Animate card
+  const card = document.getElementById('task-card');
+  card.classList.add('pop');
+  setTimeout(() => card.classList.remove('pop'), 600);
+
+  // Confetti!
+  launchConfetti();
+
+  // Re-render
+  render();
+}
+
+/* =============================================
+   CONFETTI
+   ============================================= */
+function launchConfetti() {
+  const colors = ['#c8a96e','#7c6f5c','#3d9970','#f5a623','#e74c3c','#3498db','#9b59b6'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.cssText = `
+        left: ${Math.random() * 100}vw;
+        top: -10px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        width: ${6 + Math.random() * 8}px;
+        height: ${6 + Math.random() * 8}px;
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        animation-duration: ${1.5 + Math.random() * 2}s;
+        animation-delay: ${Math.random() * 0.5}s;
+      `;
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 3500);
+    }, i * 15);
+  }
+}
+
+/* =============================================
+   LANGUAGE SWITCHER
+   ============================================= */
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('dt_lang', lang);
+  render();
+}
+
+/* =============================================
+   DARK MODE
+   ============================================= */
+function toggleTheme() {
+  isDark = !isDark;
+  localStorage.setItem('dt_dark', isDark);
+  applyTheme();
+}
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+}
+
+/* =============================================
+   ONBOARDING
+   ============================================= */
+function showOnboarding() {
+  const ob = document.getElementById('onboarding');
+  ob.style.display = 'flex';
+  // Translate
+  const tr = i18n[currentLang];
+  document.getElementById('ob-title').textContent = tr.obTitle;
+  document.getElementById('ob-desc').textContent  = tr.obDesc;
+  document.getElementById('ob-btn').textContent   = tr.obBtn;
+}
+function closeOnboarding() {
+  document.getElementById('onboarding').style.display = 'none';
+  localStorage.setItem('dt_seen', 'true');
+}
+
+/* =============================================
+   STREAK RESET CHECK
+   (If user missed a day, reset streak on load)
+   ============================================= */
+function checkStreakReset() {
+  if (lastComplete && lastComplete !== todayStr() && lastComplete !== yesterdayStr()) {
+    // More than 1 day ago — reset streak
+    streak = 0;
+    localStorage.setItem('dt_streak', '0');
+  }
+}
+
+/* =============================================
+   INIT
+   ============================================= */
+function init() {
+  applyTheme();
+  checkStreakReset();
+  render();
+
+  // Show onboarding for first-time users
+  if (!localStorage.getItem('dt_seen')) {
+    setTimeout(showOnboarding, 600);
+  }
+}
+
+// Start the app
+init();
+</script>
+</body>
+</html>
